@@ -3,3 +3,7 @@ a.out
 .DS_Store
 build/
 dist/
+main
+main.dSYM
+test_
+test/*.o
