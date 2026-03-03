@@ -1,7 +1,6 @@
 #include "test_helper.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
 
 #define TEST_MAX_OUTPUT 16384
@@ -122,6 +121,63 @@ void test_table_full(TestResults *results) {
   results->passed++;
 }
 
+void test_max_length_username_and_email(TestResults *results) {
+  printf("test_max_length_username_and_email: ");
+
+  char username[33];
+  memset(username, 'a', 32);
+  username[32] = '\0';
+
+  char email[256];
+  memset(email, 'b', 255);
+  email[255] = '\0';
+
+  char insert_cmd[512];
+  snprintf(insert_cmd, sizeof(insert_cmd), "insert 1 %s %s", username, email);
+
+  const char *commands[] = {insert_cmd, "select"};
+  char *output = run_db_commands(commands, 2);
+
+  if (!output) {
+    printf(FAIL " Could not run commands\n");
+    results->failed++;
+    return;
+  }
+
+  if (!assert_string_contains(output, "Executed")) {
+    printf(FAIL " Insert did not return 'Executed'\n");
+    printf("  Output: %s\n", output);
+    free(output);
+    results->failed++;
+    return;
+  }
+
+  char expected_output[512];
+  snprintf(expected_output, sizeof(expected_output), "(1, %s, %s)", username, email);
+  if (!assert_string_contains(output, expected_output)) {
+    printf(FAIL " Expected output not found\n");
+    printf("  Expected: %s\n", expected_output);
+    printf("  Output: %s\n", output);
+    free(output);
+    results->failed++;
+    return;
+  }
+
+  char unexpected[64];
+  snprintf(unexpected, sizeof(unexpected), "(1, %saa", username);
+  if (assert_string_contains(output, unexpected)) {
+    printf(FAIL " Output contains garbage after username - missing null terminator\n");
+    printf("  Output: %s\n", output);
+    free(output);
+    results->failed++;
+    return;
+  }
+
+  free(output);
+  printf(PASS "\n");
+  results->passed++;
+}
+
 int main() {
   TestResults results = {0, 0};
 
@@ -132,6 +188,7 @@ int main() {
   test_insert_and_select(&results);
   test_select_empty_db(&results);
   test_table_full(&results);
+  test_max_length_username_and_email(&results);
 
   clock_t end = clock();
   double elapsed = (double)(end - start) / CLOCKS_PER_SEC;
