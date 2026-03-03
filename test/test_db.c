@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define TEST_MAX_OUTPUT 16384
 
@@ -18,13 +19,11 @@ typedef struct {
 } TestResults;
 
 void test_insert_and_select(TestResults *results) {
-  printf("insert and select two records... ");
+  printf("insert_and_select_two_records: ");
 
-  const char *commands[] = {
-    "insert 1 testuser test@example.com",
-    "insert 2 anotheruser another@example.com",
-    "select"
-  };
+  const char *commands[] = {"insert 1 testuser test@example.com",
+                            "insert 2 anotheruser another@example.com",
+                            "select"};
 
   char *output = run_db_commands(commands, 3);
   if (!output) {
@@ -49,7 +48,8 @@ void test_insert_and_select(TestResults *results) {
     return;
   }
 
-  if (!assert_string_contains(output, "(2, anotheruser, another@example.com)")) {
+  if (!assert_string_contains(output,
+                              "(2, anotheruser, another@example.com)")) {
     printf(FAIL " Second record not found in output\n");
     printf("  Output: %s\n", output);
     free(output);
@@ -63,7 +63,7 @@ void test_insert_and_select(TestResults *results) {
 }
 
 void test_select_empty_db(TestResults *results) {
-  printf("select on empty db... ");
+  printf("test_select_on_empty_db: ");
 
   const char *commands[] = {"select"};
 
@@ -88,14 +88,15 @@ void test_select_empty_db(TestResults *results) {
 }
 
 void test_table_full(TestResults *results) {
-  printf("table full error... ");
+  printf("test_table_full_error: ");
 
   const int MAX_ROWS = 1400;
   const char *commands[1402];
   char inserts[1400][50];
 
   for (int i = 0; i < MAX_ROWS; i++) {
-    snprintf(inserts[i], sizeof(inserts[i]), "insert %d user%d test%d@test.com", i + 1, i + 1, i + 1);
+    snprintf(inserts[i], sizeof(inserts[i]), "insert %d user%d test%d@test.com",
+             i + 1, i + 1, i + 1);
     commands[i] = inserts[i];
   }
   commands[MAX_ROWS] = "insert 9999 overflow overflow@test.com";
@@ -124,16 +125,27 @@ void test_table_full(TestResults *results) {
 int main() {
   TestResults results = {0, 0};
 
-  printf("=== Database Tests ===\n\n");
+  printf("=== Running Tests ===\n\n");
+
+  clock_t start = clock();
 
   test_insert_and_select(&results);
   test_select_empty_db(&results);
   test_table_full(&results);
 
+  clock_t end = clock();
+  double elapsed = (double)(end - start) / CLOCKS_PER_SEC;
+
+  int total = results.passed + results.failed;
+
   if (results.failed > 0) {
-    printf("\n=== Results: " RED "%d passed, %d failed" RESET " ===\n", results.passed, results.failed);
+    printf("\n=== Finished: Total: %d | " GREEN "Passed: %d" RESET " | " RED
+           "Failed: %d" RESET " | In: %.3fs ===\n",
+           total, results.passed, results.failed, elapsed);
   } else {
-    printf("\n=== Results: " GREEN "%d passed, %d failed" RESET " ===\n", results.passed, results.failed);
+    printf("\n=== Finished: Total: %d | " GREEN "Passed: %d" RESET
+           " | Failed: %d | In: %.3fs ===\n",
+           total, results.passed, results.failed, elapsed);
   }
 
   return results.failed > 0 ? 1 : 0;
