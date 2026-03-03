@@ -121,7 +121,7 @@ InputBuffer *new_input_buffer() {
   return input_buffer;
 }
 
-void print_prompt() { printf("db > "); }
+void print_prompt() { printf("fluxdb> "); }
 
 void read_input(InputBuffer *input_buffer) {
   ssize_t bytes_read =
@@ -191,6 +191,7 @@ ExecuteResult execute_insert(Statement *statement, Table *table) {
 }
 
 ExecuteResult execute_select(Statement *statement, Table *table) {
+  (void)statement;
   Row row;
 
   for (uint32_t i = 0; i < table->num_rows; i++) {
@@ -213,6 +214,8 @@ ExecuteResult execute_statement(Statement *statement, Table *table) {
 }
 
 int main(int argc, char *argv[]) {
+  (void)argc;
+  (void)argv;
   Table *table = new_table();
   InputBuffer *input_buffer = new_input_buffer();
 
