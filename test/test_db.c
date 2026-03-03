@@ -87,6 +87,40 @@ void test_select_empty_db(TestResults *results) {
   results->passed++;
 }
 
+void test_table_full(TestResults *results) {
+  printf("table full error... ");
+
+  const int MAX_ROWS = 1400;
+  const char *commands[1402];
+  char inserts[1400][50];
+
+  for (int i = 0; i < MAX_ROWS; i++) {
+    snprintf(inserts[i], sizeof(inserts[i]), "insert %d user%d test%d@test.com", i + 1, i + 1, i + 1);
+    commands[i] = inserts[i];
+  }
+  commands[MAX_ROWS] = "insert 9999 overflow overflow@test.com";
+  commands[MAX_ROWS + 1] = "select";
+
+  char *output = run_db_commands(commands, MAX_ROWS + 2);
+  if (!output) {
+    printf(FAIL " Could not run commands\n");
+    results->failed++;
+    return;
+  }
+
+  if (!assert_string_contains(output, "Error: Table full")) {
+    printf(FAIL " Expected 'Error: Table full'\n");
+    printf("  Output: %s\n", output);
+    free(output);
+    results->failed++;
+    return;
+  }
+
+  free(output);
+  printf(PASS "\n");
+  results->passed++;
+}
+
 int main() {
   TestResults results = {0, 0};
 
@@ -94,6 +128,7 @@ int main() {
 
   test_insert_and_select(&results);
   test_select_empty_db(&results);
+  test_table_full(&results);
 
   if (results.failed > 0) {
     printf("\n=== Results: " RED "%d passed, %d failed" RESET " ===\n", results.passed, results.failed);
