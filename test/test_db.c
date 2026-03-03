@@ -92,7 +92,7 @@ void test_table_full(TestResults *results) {
 
   const int MAX_ROWS = 1400;
   const char *commands[1402];
-  char inserts[1400][50];
+  char inserts[1400][64];
 
   for (int i = 0; i < MAX_ROWS; i++) {
     snprintf(inserts[i], sizeof(inserts[i]), "insert %d user%d test%d@test.com",
