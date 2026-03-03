@@ -18,7 +18,7 @@ typedef struct {
 } TestResults;
 
 void test_insert_and_select(TestResults *results) {
-  printf("insert_and_select_two_records: ");
+  printf("test_insert_and_select_two_records: ");
 
   const char *commands[] = {"insert 1 testuser test@example.com",
                             "insert 2 anotheruser another@example.com",
