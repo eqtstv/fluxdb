@@ -153,7 +153,8 @@ void test_max_length_username_and_email(TestResults *results) {
   }
 
   char expected_output[512];
-  snprintf(expected_output, sizeof(expected_output), "(1, %s, %s)", username, email);
+  snprintf(expected_output, sizeof(expected_output), "(1, %s, %s)", username,
+           email);
   if (!assert_string_contains(output, expected_output)) {
     printf(FAIL " Expected output not found\n");
     printf("  Expected: %s\n", expected_output);
@@ -166,7 +167,45 @@ void test_max_length_username_and_email(TestResults *results) {
   char unexpected[64];
   snprintf(unexpected, sizeof(unexpected), "(1, %saa", username);
   if (assert_string_contains(output, unexpected)) {
-    printf(FAIL " Output contains garbage after username - missing null terminator\n");
+    printf(
+        FAIL
+        " Output contains garbage after username - missing null terminator\n");
+    printf("  Output: %s\n", output);
+    free(output);
+    results->failed++;
+    return;
+  }
+
+  free(output);
+  printf(PASS "\n");
+  results->passed++;
+}
+
+void test_too_long_username_and_email(TestResults *results) {
+  printf("test_too_long_username_and_email: ");
+
+  char username[40];
+  memset(username, 'x', 39);
+  username[39] = '\0';
+
+  char email[300];
+  memset(email, 'y', 299);
+  email[299] = '\0';
+
+  char insert_cmd[512];
+  snprintf(insert_cmd, sizeof(insert_cmd), "insert 1 %s %s", username, email);
+
+  const char *commands[] = {insert_cmd, "select"};
+  char *output = run_db_commands(commands, 2);
+
+  if (!output) {
+    printf(FAIL " Could not run commands\n");
+    results->failed++;
+    return;
+  }
+
+  if (!assert_string_contains(output, "String is too long")) {
+    printf(FAIL " Expected 'String is too long' error\n");
     printf("  Output: %s\n", output);
     free(output);
     results->failed++;
@@ -189,6 +228,7 @@ int main() {
   test_select_empty_db(&results);
   test_table_full(&results);
   test_max_length_username_and_email(&results);
+  test_too_long_username_and_email(&results);
 
   clock_t end = clock();
   double elapsed = (double)(end - start) / CLOCKS_PER_SEC;
