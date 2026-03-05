@@ -6,10 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/_types/_off_t.h>
-#include <sys/_types/_s_ifmt.h>
-#include <sys/_types/_ssize_t.h>
-#include <sys/fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 typedef struct {
