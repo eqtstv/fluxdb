@@ -181,6 +181,31 @@ void test_max_length_username_and_email(TestResults *results) {
   results->passed++;
 }
 
+void test_negative_id(TestResults *results) {
+  printf("test_negative_id: ");
+
+  const char *commands[] = {"insert -1 testuser test@example.com", "select"};
+
+  char *output = run_db_commands(commands, 2);
+  if (!output) {
+    printf(FAIL " Could not run commands\n");
+    results->failed++;
+    return;
+  }
+
+  if (!assert_string_contains(output, "ID must be positive")) {
+    printf(FAIL " Expected error for negative id\n");
+    printf("  Output: %s\n", output);
+    free(output);
+    results->failed++;
+    return;
+  }
+
+  free(output);
+  printf(PASS "\n");
+  results->passed++;
+}
+
 void test_too_long_username_and_email(TestResults *results) {
   printf("test_too_long_username_and_email: ");
 
@@ -228,6 +253,7 @@ int main() {
   test_select_empty_db(&results);
   test_table_full(&results);
   test_max_length_username_and_email(&results);
+  test_negative_id(&results);
   test_too_long_username_and_email(&results);
 
   clock_t end = clock();

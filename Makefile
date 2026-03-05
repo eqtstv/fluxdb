@@ -14,7 +14,7 @@ test: main
 	@rm -f test_ test/*.o
 
 run: main
-	@./main
+	@./main $(filename)
 
 clean:
 	@rm -rf main main.dSYM test_
