@@ -7,3 +7,4 @@ main
 main.dSYM
 test_
 test/*.o
+*.db
