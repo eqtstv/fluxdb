@@ -20,6 +20,7 @@ typedef enum {
 
 typedef enum {
   PREPARE_SUCCESS,
+  PREPARE_NEGATIVE_ID,
   PREPARE_SYNTAX_ERROR,
   PREPARE_UNRECOGNIZED_STATEMENT,
   PREPARE_STRING_TOO_LONG,
@@ -173,7 +174,12 @@ PrepareResult prepare_insert(InputBuffer *input_buffer, Statement *statement) {
     return PREPARE_STRING_TOO_LONG;
   }
 
-  statement->row_to_insert.id = atoi(id_string);
+  int id = atoi(id_string);
+  if (id < 0) {
+    return PREPARE_NEGATIVE_ID;
+  }
+
+  statement->row_to_insert.id = id;
   strcpy(statement->row_to_insert.username, username);
   strcpy(statement->row_to_insert.email, email);
 
@@ -253,6 +259,9 @@ int main(int argc, char *argv[]) {
     Statement statement;
     switch (prepare_statement(input_buffer, &statement)) {
     case (PREPARE_SUCCESS):
+      break;
+    case (PREPARE_NEGATIVE_ID):
+      printf("ID must be positive.\n");
       break;
     case (PREPARE_SYNTAX_ERROR):
       printf("Syntax error. Could not parse statement.\n");
