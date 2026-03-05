@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 char *run_db_commands(const char **commands, int num_commands) {
   int pipe_in[2];
@@ -35,7 +36,11 @@ char *run_db_commands(const char **commands, int num_commands) {
     dup2(pipe_in[0], STDIN_FILENO);
     dup2(pipe_out[1], STDOUT_FILENO);
 
-    char *args[] = {"./main", NULL};
+    char template[] = "/tmp/testdb_XXXXXX";
+    int fd = mkstemp(template);
+    close(fd);
+    unlink(template);
+    char *args[] = {"./main", template, NULL};
     execvp("./main", args);
     perror("execvp");
     exit(1);
